@@ -8,6 +8,12 @@
 
 // Defines /////////////////////////////////////////////////////////////////////
 
+#ifdef ARDUINO_ARCH_SAM                // In case of board with SAM architecture
+  #define WIRE_ARCH_PREFIX Wire1       // Use Wire1 commands
+#else                                  // For other boards
+  #define WIRE_ARCH_PREFIX Wire        // Use Wire commands
+#endif
+
 // The Arduino two-wire interface uses a 7-bit number for the address,
 // and sets the last bit correctly based on reads and writes
 #define ADDRESS_DEFAULT 0b0101001
@@ -284,32 +290,32 @@ bool VL53L0X::init(bool io_2v8)
 // Write an 8-bit register
 void VL53L0X::writeReg(uint8_t reg, uint8_t value)
 {
-  Wire.beginTransmission(address);
-  Wire.write(reg);
-  Wire.write(value);
-  last_status = Wire.endTransmission();
+  WIRE_ARCH_PREFIX.beginTransmission(address);
+  WIRE_ARCH_PREFIX.write(reg);
+  WIRE_ARCH_PREFIX.write(value);
+  last_status = WIRE_ARCH_PREFIX.endTransmission();
 }
 
 // Write a 16-bit register
 void VL53L0X::writeReg16Bit(uint8_t reg, uint16_t value)
 {
-  Wire.beginTransmission(address);
-  Wire.write(reg);
-  Wire.write((value >> 8) & 0xFF); // value high byte
-  Wire.write( value       & 0xFF); // value low byte
-  last_status = Wire.endTransmission();
+  WIRE_ARCH_PREFIX.beginTransmission(address);
+  WIRE_ARCH_PREFIX.write(reg);
+  WIRE_ARCH_PREFIX.write((value >> 8) & 0xFF); // value high byte
+  WIRE_ARCH_PREFIX.write( value       & 0xFF); // value low byte
+  last_status = WIRE_ARCH_PREFIX.endTransmission();
 }
 
 // Write a 32-bit register
 void VL53L0X::writeReg32Bit(uint8_t reg, uint32_t value)
 {
-  Wire.beginTransmission(address);
-  Wire.write(reg);
-  Wire.write((value >> 24) & 0xFF); // value highest byte
-  Wire.write((value >> 16) & 0xFF);
-  Wire.write((value >>  8) & 0xFF);
-  Wire.write( value        & 0xFF); // value lowest byte
-  last_status = Wire.endTransmission();
+  WIRE_ARCH_PREFIX.beginTransmission(address);
+  WIRE_ARCH_PREFIX.write(reg);
+  WIRE_ARCH_PREFIX.write((value >> 24) & 0xFF); // value highest byte
+  WIRE_ARCH_PREFIX.write((value >> 16) & 0xFF);
+  WIRE_ARCH_PREFIX.write((value >>  8) & 0xFF);
+  WIRE_ARCH_PREFIX.write( value        & 0xFF); // value lowest byte
+  last_status = WIRE_ARCH_PREFIX.endTransmission();
 }
 
 // Read an 8-bit register
@@ -317,12 +323,12 @@ uint8_t VL53L0X::readReg(uint8_t reg)
 {
   uint8_t value;
 
-  Wire.beginTransmission(address);
-  Wire.write(reg);
-  last_status = Wire.endTransmission();
+  WIRE_ARCH_PREFIX.beginTransmission(address);
+  WIRE_ARCH_PREFIX.write(reg);
+  last_status = WIRE_ARCH_PREFIX.endTransmission();
 
-  Wire.requestFrom(address, (uint8_t)1);
-  value = Wire.read();
+  WIRE_ARCH_PREFIX.requestFrom(address, (uint8_t)1);
+  value = WIRE_ARCH_PREFIX.read();
 
   return value;
 }
@@ -332,13 +338,13 @@ uint16_t VL53L0X::readReg16Bit(uint8_t reg)
 {
   uint16_t value;
 
-  Wire.beginTransmission(address);
-  Wire.write(reg);
-  last_status = Wire.endTransmission();
+  WIRE_ARCH_PREFIX.beginTransmission(address);
+  WIRE_ARCH_PREFIX.write(reg);
+  last_status = WIRE_ARCH_PREFIX.endTransmission();
 
-  Wire.requestFrom(address, (uint8_t)2);
-  value  = (uint16_t)Wire.read() << 8; // value high byte
-  value |=           Wire.read();      // value low byte
+  WIRE_ARCH_PREFIX.requestFrom(address, (uint8_t)2);
+  value  = (uint16_t)WIRE_ARCH_PREFIX.read() << 8; // value high byte
+  value |=           WIRE_ARCH_PREFIX.read();      // value low byte
 
   return value;
 }
@@ -348,15 +354,15 @@ uint32_t VL53L0X::readReg32Bit(uint8_t reg)
 {
   uint32_t value;
 
-  Wire.beginTransmission(address);
-  Wire.write(reg);
-  last_status = Wire.endTransmission();
+  WIRE_ARCH_PREFIX.beginTransmission(address);
+  WIRE_ARCH_PREFIX.write(reg);
+  last_status = WIRE_ARCH_PREFIX.endTransmission();
 
-  Wire.requestFrom(address, (uint8_t)4);
-  value  = (uint32_t)Wire.read() << 24; // value highest byte
-  value |= (uint32_t)Wire.read() << 16;
-  value |= (uint16_t)Wire.read() <<  8;
-  value |=           Wire.read();       // value lowest byte
+  WIRE_ARCH_PREFIX.requestFrom(address, (uint8_t)4);
+  value  = (uint32_t)WIRE_ARCH_PREFIX.read() << 24; // value highest byte
+  value |= (uint32_t)WIRE_ARCH_PREFIX.read() << 16;
+  value |= (uint16_t)WIRE_ARCH_PREFIX.read() <<  8;
+  value |=           WIRE_ARCH_PREFIX.read();       // value lowest byte
 
   return value;
 }
@@ -365,30 +371,30 @@ uint32_t VL53L0X::readReg32Bit(uint8_t reg)
 // starting at the given register
 void VL53L0X::writeMulti(uint8_t reg, uint8_t const * src, uint8_t count)
 {
-  Wire.beginTransmission(address);
-  Wire.write(reg);
+  WIRE_ARCH_PREFIX.beginTransmission(address);
+  WIRE_ARCH_PREFIX.write(reg);
 
   while (count-- > 0)
   {
-    Wire.write(*(src++));
+    WIRE_ARCH_PREFIX.write(*(src++));
   }
 
-  last_status = Wire.endTransmission();
+  last_status = WIRE_ARCH_PREFIX.endTransmission();
 }
 
 // Read an arbitrary number of bytes from the sensor, starting at the given
 // register, into the given array
 void VL53L0X::readMulti(uint8_t reg, uint8_t * dst, uint8_t count)
 {
-  Wire.beginTransmission(address);
-  Wire.write(reg);
-  last_status = Wire.endTransmission();
+  WIRE_ARCH_PREFIX.beginTransmission(address);
+  WIRE_ARCH_PREFIX.write(reg);
+  last_status = WIRE_ARCH_PREFIX.endTransmission();
 
-  Wire.requestFrom(address, count);
+  WIRE_ARCH_PREFIX.requestFrom(address, count);
 
   while (count-- > 0)
   {
-    *(dst++) = Wire.read();
+    *(dst++) = WIRE_ARCH_PREFIX.read();
   }
 }
 
